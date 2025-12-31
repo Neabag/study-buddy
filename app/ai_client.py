@@ -33,7 +33,6 @@ def get_streaming_response(message: str):
         model="moonshotai/Kimi-K2-Instruct-0905",
         input=message,
     ) as stream:
-
         for event in stream:
             if event.type == "response.output_text.delta":
                 yield event.delta

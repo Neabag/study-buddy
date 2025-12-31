@@ -5,6 +5,8 @@ from datetime import datetime
 class ChatRequest(BaseModel):
     user_id: str
     message: str
+    mode: str = "tutor"
+    format: str = "plain"
 
 class ChatResponse(BaseModel):
     reply: str
