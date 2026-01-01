@@ -9,9 +9,10 @@ from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.schemas import ChatRequest, ChatResponse, HistoryResponse, HistoryRequest
 from app.ai_client import get_ai_response, get_streaming_response
-from app.crud import save_message, get_last_messages
+from app.crud import save_message, get_last_messages, create_thread, get_thread_by_id, get_threads_by_user_id
 from app.prompts import build_system_prompt
 from app.prompt_builder import build_messages
+import uuid
 
 app = FastAPI(title="Study Buddy Backend")
 
@@ -22,6 +23,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Thread-Id"],
 )
 
 # Mount static files
@@ -34,6 +36,8 @@ def get_db():
     finally:
         db.close()
 
+def generate_thread_id():
+    return str(uuid.uuid4())
 
 @app.get("/")
 async def read_root():
@@ -73,20 +77,32 @@ def chat_history(request:HistoryRequest, db:Session = Depends(get_db)):
     }
 
 @app.get("/chats", response_model=HistoryResponse)
-def get_chats(user_id:str, db:Session = Depends(get_db)):
+def get_chats(user_id:str, thread_id:str, db:Session = Depends(get_db)):
     # Fetch past messages
-    chats = get_last_messages(db, user_id, limit=100)
+    chats = get_last_messages(db, user_id, thread_id, limit=100)
     return {
         "messages": chats
     }
 
 @app.post("/chat_streams")
 def chat_streams(request: ChatRequest, db: Session = Depends(get_db)):
+    user_id = request.user_id
+    message = request.message
+    thread_id = request.thread_id
+
+    if not thread_id:
+        thread = create_thread(db, user_id, message[:30])
+        thread_id = thread.id
+    else:
+        thread = get_thread_by_id(db, thread_id)
+        if not thread:
+            thread = create_thread(db, user_id, message[:30])
+            thread_id = thread.id
     # Save user message
-    save_message(db, request.user_id, 'user', request.message)
+    save_message(db, user_id, 'user', thread_id, message)
 
     # Fetch history
-    history = get_last_messages(db, request.user_id, limit=8)
+    history = get_last_messages(db, user_id, thread_id, limit=8)
     history = list[Message](reversed(history))
 
     # Build system prompt
@@ -99,7 +115,7 @@ def chat_streams(request: ChatRequest, db: Session = Depends(get_db)):
     messages = build_messages(
         system_prompt=system_prompt,
         history=history,
-        user_message=request.message
+        user_message=message
     )
     
     # Create a generator that collects the full response and saves it
@@ -110,14 +126,28 @@ def chat_streams(request: ChatRequest, db: Session = Depends(get_db)):
             yield chunk
         
         # Save the complete AI response after streaming is done
-        save_message(db, request.user_id, 'assistant', full_response)
+        save_message(db, request.user_id, 'assistant', thread_id, full_response)
     
-    return StreamingResponse(
+    response = StreamingResponse(
         stream_with_save(),
         media_type="text/plain"
     )
+    response.headers["X-Thread-Id"] = thread_id
+    return response
 
-print(__name__)
+@app.get("/threads")
+def get_threads(user_id: str, db: Session = Depends(get_db)):
+    threads = get_threads_by_user_id(db, user_id)
+    return {
+        "threads": [
+            {
+                "thread_id": t.id,
+                "title": t.title,
+                "updated_at": t.updated_at
+            }
+            for t in threads
+        ]
+    }
 
 # if __name__ == "__main__":
 #     print("Starting server...")

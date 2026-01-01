@@ -8,223 +8,8 @@
   <!-- Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.0.0/dist/markdown-it.min.js"></script>
 
-  <title>Study Buddy Chat</title>
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-        Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-
-    /* ---------- LOGIN ---------- */
-    .login-screen {
-      text-align: center;
-      color: white;
-    }
-
-    .login-screen h1 {
-      font-size: 36px;
-      margin-bottom: 10px;
-    }
-
-    .login-screen p {
-      margin-bottom: 30px;
-      opacity: 0.9;
-    }
-
-    #loginUserIdInput {
-      padding: 14px 18px;
-      width: 320px;
-      border-radius: 25px;
-      border: none;
-      outline: none;
-      font-size: 16px;
-    }
-
-    #loginButton {
-      margin-top: 15px;
-      padding: 12px 30px;
-      border-radius: 25px;
-      border: none;
-      background: white;
-      color: #667eea;
-      font-weight: bold;
-      cursor: pointer;
-      width: 100%;
-    }
-
-    /* ---------- CHAT ---------- */
-    .chat-container {
-      width: 100%;
-      max-width: 900px;
-      height: 92vh;
-      background: white;
-      border-radius: 18px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      display: none;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    .chat-container.active {
-      display: flex;
-    }
-
-    .chat-header {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      padding: 18px;
-      font-size: 22px;
-      font-weight: 600;
-      text-align: center;
-    }
-
-    .chat-messages {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
-      background: #f8f9fb;
-    }
-
-    .message {
-      display: flex;
-      margin-bottom: 18px;
-      animation: fadeIn 0.25s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .message.user {
-      justify-content: flex-end;
-    }
-
-    .message.assistant {
-      justify-content: flex-start;
-    }
-
-    .message-content {
-      max-width: 75%;
-      padding: 14px 18px;
-      border-radius: 16px;
-      line-height: 1.75;
-      font-size: 15.5px;
-    }
-
-    .message.user .message-content {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
-
-    .message.assistant .message-content {
-      background: white;
-      border: 1px solid #e5e7eb;
-      color: #111827;
-      border-bottom-left-radius: 4px;
-    }
-
-    /* ---------- MARKDOWN ---------- */
-    .message.assistant ul,
-    .message.assistant ol {
-      margin-left: 22px;
-      margin-top: 8px;
-    }
-
-    .message.assistant li {
-      margin-bottom: 6px;
-    }
-
-    .message.assistant pre {
-      background: #0f172a;
-      color: #e5e7eb;
-      padding: 16px;
-      border-radius: 10px;
-      overflow-x: auto;
-      margin: 12px 0;
-      font-size: 14px;
-    }
-
-    .message.assistant code {
-      background: rgba(15, 23, 42, 0.08);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: "SF Mono", Consolas, monospace;
-    }
-
-    .message.assistant pre code {
-      background: transparent;
-      padding: 0;
-    }
-
-    /* ---------- INPUT ---------- */
-    .chat-input-container {
-      padding: 18px;
-      border-top: 1px solid #e5e7eb;
-      background: white;
-    }
-
-    .input-wrapper {
-      display: flex;
-      gap: 10px;
-    }
-
-    #messageInput {
-      flex: 1;
-      padding: 14px 18px;
-      border-radius: 25px;
-      border: 2px solid #e5e7eb;
-      outline: none;
-      font-size: 16px;
-    }
-
-    #sendButton {
-      padding: 14px 28px;
-      border-radius: 25px;
-      border: none;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .message.assistant hr {
-      margin: 8px 0;
-    }
-
-    /* ---------- CURSOR ---------- */
-    .typing::after {
-      content: "▋";
-      animation: blink 1s infinite;
-      color: #667eea;
-    }
-
-    @keyframes blink {
-      50% {
-        opacity: 0;
-      }
-    }
-  </style>
+  <title>Study Buddy</title>
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
 
 <body>
@@ -233,122 +18,32 @@
     <h1>🤖 Study Buddy</h1>
     <p>Enter your user ID</p>
     <input id="loginUserIdInput" placeholder="user123" />
-    <br />
     <button id="loginButton">Start Chat</button>
   </div>
 
-  <!-- CHAT -->
-  <div class="chat-container" id="chatContainer">
-    <div class="chat-header">🤖 Study Buddy</div>
-    <div class="chat-messages" id="chatMessages"></div>
-    <div class="chat-input-container">
-      <div class="input-wrapper">
-        <input id="messageInput" placeholder="Type your message..." />
-        <button id="sendButton">Send</button>
+  <!-- MAIN LAYOUT -->
+  <div class="chat-layout" id="chatLayout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <button class="new-chat-btn" id="newChatBtn">＋ New Chat</button>
+      <div class="thread-list" id="threadList"></div>
+    </aside>
+
+    <!-- CHAT -->
+    <div class="chat-container">
+      <div class="chat-header">🤖 Study Buddy</div>
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <div class="chat-input-container">
+        <div class="input-wrapper">
+          <textarea id="messageInput" placeholder="Type your message… (Shift+Enter for new line)"></textarea>
+          <button id="sendButton">Send</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    const md = window.markdownit({ breaks: true, linkify: true });
-
-    const loginScreen = document.getElementById("loginScreen");
-    const chatContainer = document.getElementById("chatContainer");
-    const chatMessages = document.getElementById("chatMessages");
-    const messageInput = document.getElementById("messageInput");
-    const loginInput = document.getElementById("loginUserIdInput");
-
-    let userId = null;
-
-    // ⚠️ IMPORTANT: backend base URL
-    const API_BASE = "http://127.0.0.1:8000";
-
-    function addMessage(content, role, markdown = false) {
-      const div = document.createElement("div");
-      div.className = `message ${role}`;
-
-      const contentDiv = document.createElement("div");
-      contentDiv.className = "message-content";
-      contentDiv.innerHTML = markdown ? md.render(content) : content;
-
-      div.appendChild(contentDiv);
-      chatMessages.appendChild(div);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-      return contentDiv;
-    }
-
-    async function loadChatHistory() {
-      if (!userId) return;
-
-      try {
-        const res = await fetch(
-          `${API_BASE}/chats?user_id=${encodeURIComponent(userId)}`
-        );
-
-        if (!res.ok) return;
-
-        const data = await res.json();
-        chatMessages.innerHTML = "";
-
-        if (data.messages) {
-          [...data.messages].reverse().forEach((msg) => {
-            addMessage(
-              msg.content,
-              msg.role,
-              msg.role === "assistant"
-            );
-          });
-        }
-      } catch (err) {
-        console.error("History error:", err);
-      }
-    }
-
-    async function sendMessage() {
-      const text = messageInput.value.trim();
-      if (!text) return;
-
-      addMessage(text, "user");
-      messageInput.value = "";
-
-      const assistantDiv = addMessage(
-        '<span class="typing"></span>',
-        "assistant"
-      );
-
-      const res = await fetch(`${API_BASE}/chat_streams`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_id: userId, message: text }),
-      });
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let full = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        full += decoder.decode(value);
-        assistantDiv.innerHTML = md.render(full);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-      }
-    }
-
-    document.getElementById("sendButton").onclick = sendMessage;
-    messageInput.onkeydown = (e) => {
-      if (e.key === "Enter") sendMessage();
-    };
-
-    document.getElementById("loginButton").onclick = () => {
-      userId = loginInput.value.trim();
-      if (!userId) return alert("Enter user id");
-
-      loginScreen.style.display = "none";
-      chatContainer.classList.add("active");
-      loadChatHistory();
-    };
-  </script>
+  <script src="/static/main.js"></script>
 </body>
 
 </html>
