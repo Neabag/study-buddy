@@ -23,11 +23,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["X-Thread-Id"],
+    expose_headers=["X-Thread-Id", "X-Thread-Title"],
 )
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
 
 def get_db():
     db = SessionLocal()
@@ -36,19 +37,23 @@ def get_db():
     finally:
         db.close()
 
+
 def generate_thread_id():
     return str(uuid.uuid4())
+
 
 @app.get("/")
 async def read_root():
     return FileResponse("static/index.html")
 
+
 @app.get("/health")
 def health_check():
-    return {"Hello": "World","status": "ok" }
+    return {"Hello": "World", "status": "ok"}
+
 
 @app.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest, db:Session = Depends(get_db)):
+def chat(request: ChatRequest, db: Session = Depends(get_db)):
     print("request received", request)
     # save user messages
     save_message(db, request.user_id, 'user', request.message)
@@ -56,7 +61,7 @@ def chat(request: ChatRequest, db:Session = Depends(get_db)):
     # Fetch past messages
     history = get_last_messages(db, request.user_id, limit=10)
     history = list[Message](reversed[Message](history))
-        
+
     print('history', history)
 
     # get reply from ai modal
@@ -66,23 +71,26 @@ def chat(request: ChatRequest, db:Session = Depends(get_db)):
 
     save_message(db, request.user_id, 'assistant', ai_response)
 
-    return ChatResponse(reply = ai_response)
-    
+    return ChatResponse(reply=ai_response)
+
+
 @app.post("/chat_history", response_model=HistoryResponse)
-def chat_history(request:HistoryRequest, db:Session = Depends(get_db)):
+def chat_history(request: HistoryRequest, db: Session = Depends(get_db)):
     # Fetch past messages
     history = get_last_messages(db, request.user_id, limit=100)
     return {
         "messages": history
     }
 
+
 @app.get("/chats", response_model=HistoryResponse)
-def get_chats(user_id:str, thread_id:str, db:Session = Depends(get_db)):
+def get_chats(user_id: str, thread_id: str, db: Session = Depends(get_db)):
     # Fetch past messages
     chats = get_last_messages(db, user_id, thread_id, limit=100)
     return {
         "messages": chats
     }
+
 
 @app.post("/chat_streams")
 def chat_streams(request: ChatRequest, db: Session = Depends(get_db)):
@@ -117,23 +125,26 @@ def chat_streams(request: ChatRequest, db: Session = Depends(get_db)):
         history=history,
         user_message=message
     )
-    
+
     # Create a generator that collects the full response and saves it
     def stream_with_save():
         full_response = ""
         for chunk in get_streaming_response(messages):
             full_response += chunk
             yield chunk
-        
+
         # Save the complete AI response after streaming is done
-        save_message(db, request.user_id, 'assistant', thread_id, full_response)
-    
+        save_message(db, request.user_id, 'assistant',
+                     thread_id, full_response)
+
     response = StreamingResponse(
         stream_with_save(),
         media_type="text/plain"
     )
     response.headers["X-Thread-Id"] = thread_id
+    response.headers["X-Thread-Title"] = message[:30]
     return response
+
 
 @app.get("/threads")
 def get_threads(user_id: str, db: Session = Depends(get_db)):

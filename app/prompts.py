@@ -19,11 +19,11 @@ FORMAT_PROMPTS = {
     "md": "Response in markdown format.",
     "steps": "Respond using step-by-step numbered format.",
     "json": """
-Respond strictly in valid JSON with keys:
-- summary
-- key_points
-- example
-"""
+        Respond strictly in valid JSON with keys:
+        - summary
+        - key_points
+        - example
+    """
 }
 
 MODE_PROMPTS = {

@@ -119,17 +119,7 @@ async function sendMessage() {
     });
 
     const thread_id = res.headers.get("X-Thread-Id");
-
-    if (!currentThreadId && thread_id) {
-        currentThreadId = thread_id;
-
-        // Add to sidebar if new
-        threads.unshift({
-            id: thread_id,
-            title: text.slice(0, 30)
-        });
-        renderThreads();
-    }
+    const thread_title = res.headers.get("X-Thread-Title");
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -143,11 +133,14 @@ async function sendMessage() {
         enhanceCodeBlocks(assistantDiv);
     }
 
-    const t = threads.find(t => t.id === currentThreadId);
-    if (t && t.title === "New chat") {
-        t.title = text.slice(0, 30);
-        renderThreads();
+    if (!currentThreadId && thread_id) {
+        currentThreadId = thread_id;
+        threads.unshift({
+            thread_id: thread_id,
+            title: thread_title
+        })
     }
+    renderThreads();
 }
 
 function enhanceCodeBlocks(container) {
